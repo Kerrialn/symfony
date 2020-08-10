@@ -3,5 +3,5 @@ controllers:
     type: annotation
 
 kernel:
-    resource: ../../src/Kernel.php
+    resource: ../../src/AppKernel.php
     type: annotation

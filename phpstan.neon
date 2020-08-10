@@ -1,0 +1,30 @@
+# phpstan.neon
+includes:
+    - vendor/symplify/phpstan-extensions/config/config.neon
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/symplify/coding-standard/config/symplify-rules.neon
+    - vendor/slam/phpstan-extensions/conf/slam-rules.neon
+    - vendor/slam/phpstan-extensions/conf/symfony-rules.neon
+
+rules:
+    - Symplify\CodingStandard\Rules\ForbiddenParentClassRule
+
+parameters:
+    symplify:
+        forbidden_parent_classes:
+            - 'Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository'
+
+    # see https://github.com/phpstan/phpstan-doctrine
+    doctrine:
+        objectManagerLoader: tests/object-manager.php
+
+    paths:
+        - src
+
+    level: max
+
+    excludes_analyse:
+        # messy Symfony
+        - src/Entity/User.php
+
+    ignoreErrors:
