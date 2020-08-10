@@ -5,36 +5,44 @@ declare(strict_types=1);
 namespace App;
 
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symfony\Component\HttpKernel\Kernel as BaseKernel;
+use Symfony\Component\Config\Loader\LoaderInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+use Symplify\FlexLoader\Flex\FlexLoader;
 
-final class AppKernel extends BaseKernel
+final class AppKernel extends Kernel
 {
     use MicroKernelTrait;
 
-    protected function configureContainer(ContainerConfigurator $containerConfigurator): void
-    {
-        $containerConfigurator->import('../config/{packages}/*.yaml');
-        $containerConfigurator->import('../config/{packages}/' . $this->environment . '/*.yaml');
+    /**
+     * @var FlexLoader
+     */
+    private $flexLoader;
 
-        if (is_file(\dirname(__DIR__) . '/config/services.yaml')) {
-            $containerConfigurator->import('../config/{services}.yaml');
-            $containerConfigurator->import('../config/{services}_' . $this->environment . '.yaml');
-        } elseif (is_file($path = \dirname(__DIR__) . '/config/services.php')) {
-            (require $path)($containerConfigurator->withPath($path), $this);
-        }
+    public function __construct(string $environment, bool $debug)
+    {
+        parent::__construct($environment, $debug);
+
+        $this->flexLoader = new FlexLoader($environment, $this->getProjectDir());
     }
 
+    public function registerBundles(): iterable
+    {
+        return $this->flexLoader->loadBundles();
+    }
+
+    protected function configureContainer(ContainerBuilder $containerBuilder, LoaderInterface $loader): void
+    {
+        $this->flexLoader->loadConfigs($containerBuilder, $loader);
+    }
+
+    /**
+     * If routing gets broken, debug command will help to narrow the issue:
+     * bin/console debug:router
+     */
     protected function configureRoutes(RoutingConfigurator $routingConfigurator): void
     {
-        $routingConfigurator->import('../config/{routes}/' . $this->environment . '/*.yaml');
-        $routingConfigurator->import('../config/{routes}/*.yaml');
-
-        if (is_file(\dirname(__DIR__) . '/config/routes.yaml')) {
-            $routingConfigurator->import('../config/{routes}.yaml');
-        } elseif (is_file($path = \dirname(__DIR__) . '/config/routes.php')) {
-            (require $path)($routingConfigurator->withPath($path), $this);
-        }
+        $routingConfigurator->import(__DIR__ . '/../config/routes/**/*');
     }
 }
