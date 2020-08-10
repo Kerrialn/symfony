@@ -1,0 +1,29 @@
+version: "3.7"
+services:
+  web:
+    image: app
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env.local
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/app.com:delegated
+    tmpfs:
+      - /var/www/app.com/var/cache
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:5.7
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "WeZDS2Z4GNUAgcy5"
+      MYSQL_DATABASE: "ccl_724856473"
+    volumes:
+      - ./.docker/mysql-data:/var/lib/mysql
+    ports:
+      - 3306:3306
